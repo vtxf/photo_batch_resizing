@@ -38,6 +38,7 @@ class PhotoResizingError(Exception):
 file_total = 0
 jpgfile_total = 0
 jpgfile_resize_total = 0
+jpgfile_resize_error_total = 0
 
 def __resize_single_photo(jpgfilepath, maxsize):
     '''
@@ -47,6 +48,7 @@ def __resize_single_photo(jpgfilepath, maxsize):
     global file_total
     global jpgfile_total
     global jpgfile_resize_total
+    global jpgfile_resize_error_total
     
     file_total += 1
     
@@ -54,6 +56,8 @@ def __resize_single_photo(jpgfilepath, maxsize):
     ext = ext.lower()
 
     has_resize = False
+
+    print(jpgfilepath, end=' ')
 
     if ext == ".jpg" or ext == ".jpeg":
         jpgfile_total += 1
@@ -64,23 +68,29 @@ def __resize_single_photo(jpgfilepath, maxsize):
             ratio = maxsize / m
             w, h = int(w*ratio), int(h*ratio)
             #im.thumbnail((w, h))
-            im = im.resize((w, h), Image.LANCZOS);
 
-            exif_dict = piexif.load(im.info["exif"])
-            exif_bytes = piexif.dump(exif_dict)
-            im.save(jpgfilepath, 'jpeg', exif=exif_bytes)
-            #im.save(jpgfilePath, 'jpeg')
-            #piexif.transplant(jpgfilePath, jpgfilePath)
+            try:
+                exif_dict = piexif.load(im.info["exif"])
+                exif_bytes = piexif.dump(exif_dict)
 
-            jpgfile_resize_total += 1
-            has_resize = True
+                im = im.resize((w, h), Image.LANCZOS);
+                im.save(jpgfilepath, 'jpeg', exif=exif_bytes)
+
+                #im.save(jpgfilepath, 'jpeg')
+                #piexif.transplant(jpgfilePath, jpgfilePath)
+
+                jpgfile_resize_total += 1
+                has_resize = True            
+            except Exception:
+                print("piexif got error!")
+                jpgfile_resize_error_total += 1
 
     stats= "%d/%d/%d" % (file_total, jpgfile_total, jpgfile_resize_total)
 
     if has_resize:
-        print(stats, "*", jpgfilepath)
+        print(stats, "*")
     else:
-        print(stats, jpgfilepath)
+        print(stats)
 
 
 def batch_resize_photos(photoDirOrFilePath, maxsize=1920):
@@ -96,10 +106,12 @@ def batch_resize_photos(photoDirOrFilePath, maxsize=1920):
     global file_total
     global jpgfile_total
     global jpgfile_resize_total
-
+    global jpgfile_resize_error_total
+    
     file_total = 0
     jpgfile_total = 0
     jpgfile_resize_total = 0
+    jpgfile_resize_error_total = 0
 
     print("batch_resize_photos start...")
     print("To process:", photoDirOrFilePath)
@@ -128,10 +140,11 @@ def batch_resize_photos(photoDirOrFilePath, maxsize=1920):
                 __resize_single_photo(filepath, maxsize)
 
     print("*****stats_txf*****")
-    print("Total of files: ", file_total)
-    print("Total of jpgfiles: ", jpgfile_total)
-    print("Total of jpgfiles has resized: ", jpgfile_resize_total)
-
+    print("Total of files:", file_total)
+    print("Total of jpgfiles:", jpgfile_total)
+    print("Total of jpgfiles has resized:", jpgfile_resize_total)
+    print("Total of jpgfiles has resized error:", jpgfile_resize_error_total)
+    
     print("batch_resize_photos end.")
 
 
