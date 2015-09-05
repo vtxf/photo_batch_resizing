@@ -14,11 +14,12 @@ Only for Python 3
 
 警告：会直接修改原文件本身，所以需要手动备份一下！
 
-目的：数码相机拍摄的照片尺寸过大，存贮起来很不方便，所以缩小一下尺寸方便保存。
-     用其他软件处理时会往往会丢失exif信息（相机拍摄时间等文件属性信息），本程序
-     仅缩小图像尺寸，仍然保留exif信息。
-前提：安装pillow和piexif库，仅支持python 3
 功能：批处理缩放照片，同时保留原exif信息，希望保留照相机拍摄的时间和一些参数
+前提：安装pillow和piexif库，仅支持python 3
+
+描述：数码相机拍摄的照片尺寸过大，存贮起来很不方便，所以缩小一下尺寸方便保存。
+     用其他软件处理时会往往会丢失exif信息（相机拍摄时间等文件属性信息），本程序
+     仅缩小图像尺寸，仍然保留exif信息。经在windows平台下测试过。
 
 '''
 
@@ -46,12 +47,13 @@ def __resize_single_photo(jpgfilepath, maxsize):
     global file_total
     global jpgfile_total
     global jpgfile_resize_total
-
+    
+    file_total += 1
+    
     _, ext = os.path.splitext(jpgfilepath)
     ext = ext.lower()
-    hasResize = False
 
-    file_total += 1
+    has_resize = False
 
     if ext == ".jpg" or ext == ".jpeg":
         jpgfile_total += 1
@@ -71,6 +73,14 @@ def __resize_single_photo(jpgfilepath, maxsize):
             #piexif.transplant(jpgfilePath, jpgfilePath)
 
             jpgfile_resize_total += 1
+            has_resize = True
+
+    stats= "%d/%d/%d" % (file_total, jpgfile_total, jpgfile_resize_total)
+
+    if has_resize:
+        print(stats, "*", jpgfilepath)
+    else:
+        print(stats, jpgfilepath)
 
 
 def batch_resize_photos(photoDirOrFilePath, maxsize=1920):
@@ -92,10 +102,9 @@ def batch_resize_photos(photoDirOrFilePath, maxsize=1920):
     jpgfile_resize_total = 0
 
     print("batch_resize_photos start...")
-    print("photoDirOrFilePath:", photoDirOrFilePath)
+    print("To process:", photoDirOrFilePath)
 
     photoDirOrFilePath = os.path.abspath(photoDirOrFilePath)
-    print("photoDirOrFilePath: ", photoDirOrFilePath)
 
     photo_dir = None
     photo_filePath = None
@@ -118,6 +127,11 @@ def batch_resize_photos(photoDirOrFilePath, maxsize=1920):
                 filepath = os.path.join(parent, filename)
                 __resize_single_photo(filepath, maxsize)
 
+    print("*****stats_txf*****")
+    print("Total of files: ", file_total)
+    print("Total of jpgfiles: ", jpgfile_total)
+    print("Total of jpgfiles has resized: ", jpgfile_resize_total)
+
     print("batch_resize_photos end.")
 
 
@@ -132,3 +146,5 @@ if __name__ == '__main__':
             print("Arguments got error!")
     else:
         print("Invalid arguments!")
+ 
+    os.system("pause")
