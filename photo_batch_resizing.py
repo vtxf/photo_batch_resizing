@@ -81,8 +81,8 @@ def __resize_single_photo(jpgfilepath, maxsize):
 
                 jpgfile_resize_total += 1
                 has_resize = True            
-            except Exception:
-                print("piexif got error!")
+            except Exception as e:
+                print("piexif got error!", e)
                 jpgfile_resize_error_total += 1
 
     stats= "%d/%d/%d" % (file_total, jpgfile_total, jpgfile_resize_total)
